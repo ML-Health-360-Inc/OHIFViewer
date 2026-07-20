@@ -35,3 +35,6 @@ dockerfile
 coverage/
 docs/
 testdata/
+# Not required for the viewer appliance image (Docusaurus + CLI).
+platform/docs/
+platform/cli/
