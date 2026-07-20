@@ -57,6 +57,9 @@ RUN yarn install --frozen-lockfile --verbose
 
 ENV PATH /usr/src/app/node_modules/.bin:$PATH
 ENV QUICK_BUILD true
+# Serve under appliance nginx /ohif/ (same-origin HTTPS). Override at build time if needed.
+ARG PUBLIC_URL=/ohif/
+ENV PUBLIC_URL=${PUBLIC_URL}
 # ENV GENERATE_SOURCEMAP=false
 # ENV REACT_APP_CONFIG=config/default.js
 
