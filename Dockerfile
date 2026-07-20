@@ -32,15 +32,19 @@ COPY extensions /usr/src/app/extensions
 COPY modes /usr/src/app/modes
 COPY platform /usr/src/app/platform
 
-# Find and remove non-package.json files
-#RUN find extensions \! -name "package.json" -mindepth 2 -maxdepth 2 -print | xargs rm -rf
-#RUN find modes \! -name "package.json" -mindepth 2 -maxdepth 2 -print | xargs rm -rf
-#RUN find platform \! -name "package.json" -mindepth 2 -maxdepth 2 -print | xargs rm -rf
+# Viewer image does not need Docusaurus docs or the CLI workspace.
+RUN rm -rf /usr/src/app/platform/docs /usr/src/app/platform/cli
+
+# Keep only package.json files for a cache-friendly first yarn install.
+RUN find extensions \! -name "package.json" -mindepth 2 -maxdepth 2 -print | xargs -r rm -rf \
+  && find modes \! -name "package.json" -mindepth 2 -maxdepth 2 -print | xargs -r rm -rf \
+  && find platform \! -name "package.json" -mindepth 2 -maxdepth 2 -print | xargs -r rm -rf
 
 # Copy Files
 FROM node:18.16.1-slim as builder
 # FROM node:20-slim as builder
-RUN apt-get update && apt-get install -y build-essential python3
+RUN apt-get update && apt-get install -y --no-install-recommends build-essential python3 \
+  && rm -rf /var/lib/apt/lists/*
 RUN mkdir /usr/src/app
 WORKDIR /usr/src/app
 
@@ -48,20 +52,20 @@ COPY --from=json-copier /usr/src/app .
 
 # Run the install before copying the rest of the files
 RUN yarn config set workspaces-experimental true
-RUN yarn install --frozen-lockfile --verbose
+RUN yarn install --frozen-lockfile --non-interactive --network-timeout 600000
 
 COPY . .
+# Ensure docs/cli stay out even after full source COPY (workspaces glob would reinstall them).
+RUN rm -rf /usr/src/app/platform/docs /usr/src/app/platform/cli
 
-# To restore workspaces symlinks
-RUN yarn install --frozen-lockfile --verbose
+# To restore workspaces symlinks after full source lands
+RUN yarn install --frozen-lockfile --non-interactive --network-timeout 600000
 
 ENV PATH /usr/src/app/node_modules/.bin:$PATH
 ENV QUICK_BUILD true
 # Serve under appliance nginx /ohif/ (same-origin HTTPS). Override at build time if needed.
 ARG PUBLIC_URL=/ohif/
 ENV PUBLIC_URL=${PUBLIC_URL}
-# ENV GENERATE_SOURCEMAP=false
-# ENV REACT_APP_CONFIG=config/default.js
 
 RUN yarn run build
 
