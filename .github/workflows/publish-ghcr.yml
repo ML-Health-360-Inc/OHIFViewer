@@ -2,7 +2,7 @@ name: Publish OHIF to GHCR
 
 on:
   push:
-    tags: ["v*", "[0-9]+.[0-9]+.[0-9]+*"]
+    tags: ["ohif-*", "v*"]
   workflow_dispatch:
     inputs:
       release_tag:
@@ -27,7 +27,8 @@ jobs:
         id: release
         run: |
           if [[ "${{ github.event_name }}" == "push" && "${{ github.ref }}" == refs/tags/* ]]; then
-            TAG="${GITHUB_REF_NAME#v}"
+            TAG="${GITHUB_REF_NAME#ohif-}"
+            TAG="${TAG#v}"
             echo "tag=${TAG}" >> "$GITHUB_OUTPUT"
           else
             echo "tag=${{ inputs.release_tag }}" >> "$GITHUB_OUTPUT"
