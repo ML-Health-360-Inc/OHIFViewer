@@ -1,1 +1,66 @@
-慮敭›畐汢獩⁨䡏䙉琠⁯䡇剃ਊ湯਺†異桳਺††慴獧›≛桯晩⨭Ⱒ∠⩶崢 眠牯晫潬彷楤灳瑡档਺††湩異獴਺†††敲敬獡彥慴㩧 †††搠獥牣灩楴湯›浉条⁥慴⁧攨朮‮⸰⸲⤰ †††搠晥畡瑬›〢㈮〮ਢ††††敲畱物摥›牴敵ਊ湥㩶 删䝅卉剔㩙朠捨⹲潩洯⵬敨污桴㌭〶椭据 䤠䅍䕇也䵁㩅漠楨੦樊扯㩳 瀠扵楬桳漭楨㩦 †爠湵⵳湯›扵湵畴氭瑡獥ੴ††数浲獩楳湯㩳 ††挠湯整瑮㩳爠慥੤†††慰正条獥›牷瑩੥††瑳灥㩳 ††ⴠ甠敳㩳愠瑣潩獮振敨正畯䁴㑶ਊ†††‭慮敭›敒潳癬⁥敲敬獡⁥慴੧††††摩›敲敬獡੥††††畲㩮簠 ††††椠⁦孛∠笤⁻楧桴扵攮敶瑮湟浡⁥絽•㴽∠異桳•☦∠笤⁻楧桴扵爮晥素≽㴠‽敲獦琯条⽳‪嵝※桴湥 †††††吠䝁∽笤䥇䡔䉕剟䙅也䵁⍅桯晩紭ਢ††††††䅔㵇␢呻䝁瘣≽ †††††攠档⁯琢条␽呻䝁≽㸠‾␢䥇䡔䉕佟呕啐≔ ††††攠獬੥††††††捥潨∠慴㵧笤⁻湩異獴爮汥慥敳瑟条素≽㸠‾␢䥇䡔䉕佟呕啐≔ ††††映੩ ††ⴠ甠敳㩳搠捯敫⽲潬楧⵮捡楴湯癀ਲ਼††††楷桴਺†††††敲楧瑳祲›桧牣椮੯†††††獵牥慮敭›笤⁻楧桴扵愮瑣牯素੽†††††慰獳潷摲›笤⁻敳牣瑥⹳䥇䡔䉕呟䭏久素੽ ††ⴠ甠敳㩳搠捯敫⽲敳畴⵰敱畭愭瑣潩䁮㍶ ††ⴠ甠敳㩳搠捯敫⽲敳畴⵰畢汩硤愭瑣潩䁮㍶ਊ†††‭慮敭›畂汩⁤湡⁤異桳传䥈⁆洨汵楴愭捲ⱨ倠䉕䥌彃剕㵌漯楨⽦਩††††獵獥›潤正牥戯極摬瀭獵⵨捡楴湯癀ਸ਼††††楷桴਺†††††潣瑮硥㩴⸠ ††††映汩㩥䐠捯敫晲汩੥†††††汰瑡潦浲㩳氠湩硵愯摭㐶氬湩硵愯浲㐶 ††††瀠獵㩨琠畲੥†††††畢汩ⵤ牡獧›੼††††††啐䱂䍉啟䱒⼽桯晩ਯ†††††慴獧›੼††††††笤⁻湥⹶䕒䥇呓奒素⽽笤⁻湥⹶䵉䝁彅䅎䕍素㩽笤⁻瑳灥⹳敲敬獡⹥畯灴瑵⹳慴⁧絽 †††††␠筻攠癮刮䝅卉剔⁙絽␯筻攠癮䤮䅍䕇也䵁⁅絽猺慨␭筻朠瑩畨⹢桳⁡絽 ††††氠扡汥㩳簠 †††††漠杲漮数据湯慴湩牥⹳浩条⹥潳牵散栽瑴獰⼺术瑩畨⹢潣⽭笤⁻楧桴扵爮灥獯瑩牯⁹絽 †††††漠杲漮数据湯慴湩牥⹳浩条⹥楴汴㵥桯晩 †††††漠杲漮数据湯慴湩牥⹳浩条⹥敤捳楲瑰潩㵮汭效污桴㘳‰䡏䙉嘠敩敷⁲倨䉕䥌彃剕㵌漯楨⽦਩ ††ⴠ渠浡㩥嘠牥晩⁹楬畮⽸牡㙭‴湩洠湡晩獥ੴ††††畲㩮簠 ††††搠捯敫⁲畢汩硤椠慭敧潴汯⁳湩灳捥⁴␢筻攠癮刮䝅卉剔⁙絽␯筻攠癮䤮䅍䕇也䵁⁅絽␺筻猠整獰爮汥慥敳漮瑵異獴琮条素≽尠 †††††簠朠敲⁰䔭✠汐瑡潦浲⸺氪湩硵愯浲㐶ਧ
+name: Publish OHIF to GHCR
+
+on:
+  push:
+    tags: ["ohif-*", "v*"]
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: Image tag (e.g. 0.2.0)
+        default: "0.2.0"
+        required: true
+
+env:
+  REGISTRY: ghcr.io/ml-health-360-inc
+  IMAGE_NAME: ohif
+
+jobs:
+  publish-ohif:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Resolve release tag
+        id: release
+        run: |
+          if [[ "${{ github.event_name }}" == "push" && "${{ github.ref }}" == refs/tags/* ]]; then
+            TAG="${GITHUB_REF_NAME#ohif-}"
+            TAG="${TAG#v}"
+            echo "tag=${TAG}" >> "$GITHUB_OUTPUT"
+          else
+            echo "tag=${{ inputs.release_tag }}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: docker/setup-qemu-action@v3
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Build and push OHIF (multi-arch, PUBLIC_URL=/ohif/)
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: Dockerfile
+          platforms: linux/amd64,linux/arm64
+          push: true
+          build-args: |
+            PUBLIC_URL=/ohif/
+          tags: |
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.release.outputs.tag }}
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:sha-${{ github.sha }}
+          labels: |
+            org.opencontainers.image.source=https://github.com/${{ github.repository }}
+            org.opencontainers.image.title=ohif
+            org.opencontainers.image.description=mlHealth360 OHIF Viewer (PUBLIC_URL=/ohif/)
+
+      - name: Verify linux/arm64 in manifest
+        run: |
+          docker buildx imagetools inspect "${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.release.outputs.tag }}" \
+            | grep -E 'Platform:.*linux/arm64'
