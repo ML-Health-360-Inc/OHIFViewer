@@ -1,4 +1,3 @@
-import { hydrateStructuredReport } from '@ohif/extension-cornerstone-dicom-sr';
 import { assign } from 'xstate';
 
 const RESPONSE = {
@@ -31,11 +30,30 @@ const machineConfiguration = {
     off: {
       type: 'final',
     },
+    labellingOnly: {
+      on: {
+        TRACK_SERIES: [
+          {
+            target: 'promptLabelAnnotation',
+            actions: ['setPreviousState'],
+          },
+        ],
+      },
+    },
     idle: {
       entry: 'clearContext',
       on: {
-        TRACK_SERIES: 'promptBeginTracking',
-        // Unused? We may only do PROMPT_HYDRATE_SR now?
+        TRACK_SERIES: [
+          {
+            target: 'promptLabelAnnotation',
+            cond: 'isLabelOnMeasure',
+            actions: ['setPreviousState'],
+          },
+          {
+            target: 'promptBeginTracking',
+            actions: ['setPreviousState'],
+          },
+        ],
         SET_TRACKED_SERIES: [
           {
             target: 'tracking',
@@ -65,6 +83,10 @@ const machineConfiguration = {
             cond: 'shouldSetStudyAndSeries',
           },
           {
+            target: 'labellingOnly',
+            cond: 'isLabelOnMeasureAndShouldKillMachine',
+          },
+          {
             target: 'off',
             cond: 'shouldKillMachine',
           },
@@ -81,6 +103,11 @@ const machineConfiguration = {
       on: {
         TRACK_SERIES: [
           {
+            target: 'promptLabelAnnotation',
+            cond: 'isLabelOnMeasure',
+            actions: ['setPreviousState'],
+          },
+          {
             target: 'promptTrackNewStudy',
             cond: 'isNewStudy',
           },
@@ -92,11 +119,22 @@ const machineConfiguration = {
         UNTRACK_SERIES: [
           {
             target: 'tracking',
-            actions: ['removeTrackedSeries', 'setIsDirty'],
+            actions: ['removeTrackedSeries', 'setIsDirty', 'clearDisplaySetHydratedState'],
             cond: 'hasRemainingTrackedSeries',
           },
           {
             target: 'idle',
+          },
+        ],
+        UNTRACK_ALL: [
+          {
+            target: 'tracking',
+            actions: [
+              'clearContext',
+              'setIsDirtyToClean',
+              'clearDisplaySetHydratedState',
+              'clearAllMeasurements',
+            ],
           },
         ],
         SET_TRACKED_SERIES: [
@@ -116,6 +154,15 @@ const machineConfiguration = {
             target: 'tracking',
           },
         ],
+        CHECK_DIRTY: {
+          target: 'promptHasDirtyAnnotations',
+          cond: 'hasDirtyAndSimplified',
+        },
+        PROMPT_HYDRATE_SR: {
+          target: 'promptHydrateStructuredReport',
+          cond: 'isSimplifiedConfig',
+          actions: ['clearAllMeasurements', 'clearDisplaySetHydratedState'],
+        },
       },
     },
     promptTrackNewSeries: {
@@ -184,6 +231,16 @@ const machineConfiguration = {
       invoke: {
         src: 'promptSaveReport',
         onDone: [
+          {
+            target: 'tracking',
+            actions: [
+              'clearAllMeasurements',
+              'clearDisplaySetHydratedState',
+              'setIsDirty',
+              'updatedViewports',
+            ],
+            cond: 'simplifiedAndLoadSR',
+          },
           // "clicked the save button"
           // - should clear all measurements
           // - show DICOM SR
@@ -218,7 +275,7 @@ const machineConfiguration = {
             target: 'tracking',
             actions: [
               'setTrackedStudyAndMultipleSeries',
-              'jumpToFirstMeasurementInActiveViewport',
+              'jumpToSameImageInActiveViewport',
               'setIsDirtyToClean',
             ],
             cond: 'shouldHydrateStructuredReport',
@@ -242,7 +299,7 @@ const machineConfiguration = {
             target: 'tracking',
             actions: [
               'setTrackedStudyAndMultipleSeries',
-              'jumpToFirstMeasurementInActiveViewport',
+              'jumpToSameImageInActiveViewport',
               'setIsDirtyToClean',
             ],
           },
@@ -250,6 +307,58 @@ const machineConfiguration = {
         onError: {
           target: 'idle',
         },
+      },
+    },
+    promptLabelAnnotation: {
+      invoke: {
+        src: 'promptLabelAnnotation',
+        onDone: [
+          {
+            target: 'labellingOnly',
+            cond: 'wasLabellingOnly',
+          },
+          {
+            target: 'promptBeginTracking',
+            cond: 'wasIdle',
+          },
+          {
+            target: 'promptTrackNewStudy',
+            cond: 'wasTrackingAndIsNewStudy',
+          },
+          {
+            target: 'promptTrackNewSeries',
+            cond: 'wasTrackingAndIsNewSeries',
+          },
+          {
+            target: 'tracking',
+            cond: 'wasTracking',
+          },
+          {
+            target: 'off',
+          },
+        ],
+      },
+    },
+    promptHasDirtyAnnotations: {
+      invoke: {
+        src: 'promptHasDirtyAnnotations',
+        onDone: [
+          {
+            target: 'tracking',
+            actions: [
+              'clearAllMeasurements',
+              'clearDisplaySetHydratedState',
+              'setIsDirty',
+              'updatedViewports',
+            ],
+            cond: 'shouldSetStudyAndSeries',
+          },
+          {
+            target: 'promptSaveReport',
+            cond: 'shouldPromptSaveReport',
+          },
+          { target: 'tracking' },
+        ],
       },
     },
   },
@@ -337,6 +446,11 @@ const defaultOptions = {
       prevTrackedSeries: ctx.trackedSeries.slice().filter(ser => ser !== evt.SeriesInstanceUID),
       trackedSeries: ctx.trackedSeries.slice().filter(ser => ser !== evt.SeriesInstanceUID),
     })),
+    setPreviousState: assign((ctx, evt, meta) => {
+      return {
+        prevState: meta.state.value,
+      };
+    }),
   },
   guards: {
     // We set dirty any time we performan an action that:
@@ -362,6 +476,30 @@ const defaultOptions = {
         evt.SeriesInstanceUID === undefined || ctx.trackedSeries.includes(evt.SeriesInstanceUID)
       );
     },
+    wasLabellingOnly: (ctx, evt, condMeta) => {
+      return ctx.prevState === 'labellingOnly';
+    },
+    wasIdle: (ctx, evt, condMeta) => {
+      return ctx.prevState === 'idle';
+    },
+    wasTracking: (ctx, evt, condMeta) => {
+      return ctx.prevState === 'tracking';
+    },
+    wasTrackingAndIsNewStudy: (ctx, evt, condMeta) => {
+      return (
+        ctx.prevState === 'tracking' &&
+        !ctx.ignoredSeries.includes(evt.data.SeriesInstanceUID) &&
+        ctx.trackedStudy !== evt.data.StudyInstanceUID
+      );
+    },
+    wasTrackingAndIsNewSeries: (ctx, evt, condMeta) => {
+      return (
+        ctx.prevState === 'tracking' &&
+        !ctx.ignoredSeries.includes(evt.data.SeriesInstanceUID) &&
+        !ctx.trackedSeries.includes(evt.data.SeriesInstanceUID)
+      );
+    },
+
     shouldKillMachine: (ctx, evt) => evt.data && evt.data.userResponse === RESPONSE.NO_NEVER,
     shouldAddSeries: (ctx, evt) => evt.data && evt.data.userResponse === RESPONSE.ADD_SERIES,
     shouldSetStudyAndSeries: (ctx, evt) =>
@@ -397,4 +535,4 @@ const defaultOptions = {
   },
 };
 
-export { defaultOptions, machineConfiguration };
+export { defaultOptions, machineConfiguration, RESPONSE };

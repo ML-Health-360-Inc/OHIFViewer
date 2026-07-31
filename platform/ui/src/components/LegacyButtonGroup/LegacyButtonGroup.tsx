@@ -78,7 +78,7 @@ const LegacyButtonGroup = ({
   className,
   disabled = false,
   fullWidth = false,
-  color = 'white',
+  color = 'default',
   orientation = 'horizontal',
   rounded = 'medium',
   size = 'medium',
