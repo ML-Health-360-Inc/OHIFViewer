@@ -3,7 +3,23 @@
 window.config = {
   name: 'config/default.js',
   routerBasename: null,
-  // whiteLabeling: {},
+  whiteLabeling: {
+    createLogoComponentFn: function (React) {
+      return React.createElement(
+        'a',
+        {
+          target: '_self',
+          rel: 'noopener noreferrer',
+          href: '/',
+        },
+        React.createElement('img', {
+          src: './assets/scaida-logo.svg',
+          alt: 'SCAIDA',
+          className: 'h-8',
+        })
+      );
+    },
+  },
   extensions: [],
   modes: [],
   customizationService: {},
@@ -88,7 +104,7 @@ window.config = {
       ],
     },
   ],
-  defaultDataSourceName: 'ohif',
+  defaultDataSourceName: 'dicomweb',
   /* Dynamic config allows user to pass "configUrl" query string this allows to load config without recompiling application. The regex will ensure valid configuration source */
   // dangerouslyUseDynamicConfig: {
   //   enabled: true,
@@ -99,7 +115,45 @@ window.config = {
   //   // regex: /(https:\/\/hospital.com(\/[0-9A-Za-z.]+)*)|(https:\/\/othersite.com(\/[0-9A-Za-z.]+)*)/
   //   regex: /.*/,
   // },
+  // Cloud SCAIDA Azure AD (OIDC). On-prem injects APP_CONFIG and does not use this block.
+  oidc: [
+    {
+      authority: 'https://login.microsoftonline.com/b031c552-2e5b-4f4f-9006-46c53d23f23a/v2.0/',
+      client_id: '8bd5994c-1881-4b85-bf1c-5a32f8df97c9',
+      redirect_uri: '/callback',
+      response_type: 'token',
+      scope: 'openid api://3f595ec1-9609-4865-909a-040410c5a120/user_impersonation',
+      post_logout_redirect_uri: '/logout-redirect.html',
+      automaticSilentRenew: true,
+      revokeAccessTokenOnSignout: true,
+    },
+  ],
   dataSources: [
+    {
+      namespace: '@ohif/extension-default.dataSourcesModule.dicomweb',
+      sourceName: 'dicomweb',
+      configuration: {
+        friendlyName: 'Azure Dicom Web Server',
+        name: 'AzureDicomWebServer',
+        wadoUriRoot: 'https://tws-scaida-service-a9baf2embccufgct.z02.azurefd.net/v1',
+        qidoRoot: 'https://tws-scaida-service-a9baf2embccufgct.z02.azurefd.net/v1',
+        wadoRoot: 'https://tws-scaida-service-a9baf2embccufgct.z02.azurefd.net/v1',
+        qidoSupportsIncludeField: true,
+        supportsReject: false,
+        imageRendering: 'wadors',
+        thumbnailRendering: 'wadors',
+        enableStudyLazyLoad: true,
+        supportsFuzzyMatching: true,
+        supportsWildcard: false,
+        staticWado: true,
+        singlepart: 'bulkdata,video',
+        bulkDataURI: {
+          enabled: true,
+          relativeResolution: 'studies',
+        },
+        omitQuotationForMultipartRequest: false,
+      },
+    },
     {
       namespace: '@ohif/extension-default.dataSourcesModule.dicomweb',
       sourceName: 'ohif',
