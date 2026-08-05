@@ -4,20 +4,29 @@ window.config = {
   name: 'config/default.js',
   routerBasename: null,
   whiteLabeling: {
+    // Asset paths are resolved against PUBLIC_URL so branding works for both the
+    // cloud build (PUBLIC_URL=/) and the appliance build (PUBLIC_URL=/ohif/).
     createLogoComponentFn: function (React) {
       return React.createElement(
         'a',
         {
           target: '_self',
           rel: 'noopener noreferrer',
-          href: '/',
+          href: window.PUBLIC_URL || '/',
         },
         React.createElement('img', {
-          src: './assets/scaida-logo.svg',
+          src: (window.PUBLIC_URL || '/') + 'assets/scaida-logo.svg',
           alt: 'SCAIDA',
           className: 'h-8',
         })
       );
+    },
+    createSecondaryLogoComponentFn: function (React) {
+      return React.createElement('img', {
+        src: (window.PUBLIC_URL || '/') + 'assets/mlhealth-logo.svg',
+        alt: 'mlHealth360',
+        className: 'mr-2 h-7',
+      });
     },
   },
   extensions: [],
@@ -41,6 +50,8 @@ window.config = {
     // above, the number of requests can be go a lot higher.
     prefetch: 25,
   },
+  // Render 16-bit data without scaling to 8-bit, preserving full CT/MR dynamic range.
+  useNorm16Texture: true,
   showErrorDetails: 'always', // 'always', 'dev', 'production'
   // filterQueryParam: false,
   // Defines multi-monitor layouts

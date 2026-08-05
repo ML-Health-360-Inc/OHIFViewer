@@ -27,6 +27,8 @@ interface HeaderProps {
   isSticky?: boolean;
   WhiteLabeling?: {
     createLogoComponentFn?: (React: any, props: any) => ReactNode;
+    // Optional second logo rendered at the far right of the header.
+    createSecondaryLogoComponentFn?: (React: any, props: any) => ReactNode;
   };
   PatientInfo?: ReactNode;
   Secondary?: ReactNode;
@@ -119,6 +121,14 @@ function Header({
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>
+            {WhiteLabeling?.createSecondaryLogoComponentFn && (
+              <>
+                <div className="border-primary-dark mx-1.5 h-[25px] border-r"></div>
+                <div className="flex-shrink-0">
+                  {WhiteLabeling.createSecondaryLogoComponentFn(React, props)}
+                </div>
+              </>
+            )}
           </div>
         </div>
       </NavBar>
