@@ -1,7 +1,11 @@
 name: Playwright Tests
+
+# Upstream OHIF runs this on a shared [self-hosted, nashua] runner we do not have.
+# Until this fork has its own runner (or we re-point runs-on to ubuntu-latest),
+# keep the suite manual-only so PRs are not blocked by a forever-queued job.
+# Packaging gate for this fork: Publish OHIF to GHCR (ubuntu-latest).
 on:
-  pull_request:
-    branches: [master, release/*]
+  workflow_dispatch:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
