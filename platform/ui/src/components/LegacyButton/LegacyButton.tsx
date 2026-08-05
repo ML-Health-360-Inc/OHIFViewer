@@ -44,9 +44,9 @@ const variants = {
     secondary: 'text-secondary-light hover:opacity-80 active:opacity-100 focus:opacity-80',
     translucent: 'text-white hover:opacity-80 active:opacity-100 focus:opacity-80',
     white:
-      'text-black hover:primary-main focus:primary-main hover:border-black focus:border-black',
+      'text-black hover:bg-primary-main focus:bg-primary-main hover:border-black focus:border-black',
     black:
-      'text-white hover:primary-main focus:primary-mainhover:border-black focus:border-black',
+      'text-white hover:bg-primary-main focus:bg-primary-main hover:border-black focus:border-black',
     primaryActive: 'text-primary-active hover:opacity-80 active:opacity-100 focus:opacity-80',
     primaryLight:
       'border bg-transparent border-primary-main text-white hover:opacity-80 active:opacity-100 focus:opacity-80',
@@ -137,7 +137,7 @@ const fullWidthClasses = {
 };
 
 const LegacyButton = ({
-  children,
+  children = '',
   variant = defaults.variant,
   color = defaults.color,
   border = defaults.border,
@@ -151,7 +151,7 @@ const LegacyButton = ({
   endIcon: endIconProp,
   name,
   className,
-  onClick,
+  onClick = () => {},
   /** TODO: All possible props should be explicitly defined -- avoid spreading props  */
   ...rest
 }) => {
@@ -204,13 +204,6 @@ const LegacyButton = ({
       {endIcon}
     </button>
   );
-};
-
-LegacyButton.defaultProps = {
-  color: defaults.color,
-  disabled: false,
-  children: '',
-  onClick: () => {},
 };
 
 LegacyButton.propTypes = {

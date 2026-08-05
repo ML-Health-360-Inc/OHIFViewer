@@ -1,5 +1,6 @@
 import { DicomMetadataStore, IWebApiDataSource } from '@ohif/core';
-import { get, uniqBy } from 'lodash';
+import get from 'lodash.get';
+import uniqBy from 'lodash.uniqby';
 import {
   MergeConfig,
   CallForAllDataSourcesAsyncOptions,
@@ -167,7 +168,7 @@ export const callByRetrieveAETitle = ({
 
 function createMergeDataSourceApi(
   mergeConfig: MergeConfig,
-  servicesManager: unknown,
+  servicesManager: AppTypes.ServicesManager,
   extensionManager
 ) {
   const { seriesMerge } = mergeConfig;

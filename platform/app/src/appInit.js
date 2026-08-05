@@ -9,7 +9,6 @@ import {
   UIDialogService,
   UIViewportDialogService,
   MeasurementService,
-  StateSyncService,
   DisplaySetService,
   ToolbarService,
   ViewportGridService,
@@ -19,10 +18,14 @@ import {
   errorHandler,
   CustomizationService,
   PanelService,
+  WorkflowStepsService,
+  StudyPrefetcherService,
+  MultiMonitorService,
   // utils,
 } from '@ohif/core';
 
-import loadModules from './pluginImports';
+import loadModules, { loadModule as peerImport } from './pluginImports';
+import { publicUrl } from './utils/publicUrl';
 
 /**
  * @param {object|func} appConfigOrFunc - application configuration, or a function that returns application configuration
@@ -40,9 +43,13 @@ async function appInit(appConfigOrFunc, defaultExtensions, defaultModes) {
 
   const appConfig = {
     ...(typeof appConfigOrFunc === 'function'
-      ? await appConfigOrFunc({ servicesManager })
+      ? await appConfigOrFunc({ servicesManager, peerImport })
       : appConfigOrFunc),
   };
+  // Default the peer import function
+  appConfig.peerImport ||= peerImport;
+  appConfig.measurementTrackingMode ||= 'standard';
+  appConfig.routerBasename ||= publicUrl;
 
   const extensionManager = new ExtensionManager({
     commandsManager,
@@ -55,6 +62,7 @@ async function appInit(appConfigOrFunc, defaultExtensions, defaultModes) {
   servicesManager.setExtensionManager(extensionManager);
 
   servicesManager.registerServices([
+    [MultiMonitorService.REGISTRATION, appConfig.multimonitor],
     UINotificationService.REGISTRATION,
     UIModalService.REGISTRATION,
     UIDialogService.REGISTRATION,
@@ -68,7 +76,8 @@ async function appInit(appConfigOrFunc, defaultExtensions, defaultModes) {
     CineService.REGISTRATION,
     UserAuthenticationService.REGISTRATION,
     PanelService.REGISTRATION,
-    StateSyncService.REGISTRATION,
+    WorkflowStepsService.REGISTRATION,
+    [StudyPrefetcherService.REGISTRATION, appConfig.studyPrefetcher],
   ]);
 
   errorHandler.getHTTPErrorHandler = () => {
@@ -111,7 +120,7 @@ async function appInit(appConfigOrFunc, defaultExtensions, defaultModes) {
           ? appConfig.modesConfiguration[id]
           : {};
 
-      mode = mode.modeFactory({ modeConfiguration });
+      mode = await mode.modeFactory({ modeConfiguration, loadModules });
     }
 
     if (modesById.has(id)) {

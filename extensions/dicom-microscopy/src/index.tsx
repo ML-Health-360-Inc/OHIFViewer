@@ -2,12 +2,15 @@ import { id } from './id';
 import React, { Suspense, useMemo } from 'react';
 import getPanelModule from './getPanelModule';
 import getCommandsModule from './getCommandsModule';
+import getCustomizationModule from './getCustomizationModule';
 import { Types } from '@ohif/core';
 
-import { useViewportGrid } from '@ohif/ui';
-import getDicomMicroscopySopClassHandler from './DicomMicroscopySopClassHandler';
+import { useViewportGrid } from '@ohif/ui-next';
 import getDicomMicroscopySRSopClassHandler from './DicomMicroscopySRSopClassHandler';
+import getDicomMicroscopyANNSopClassHandler from './DicomMicroscopyANNSopClassHandler';
 import MicroscopyService from './services/MicroscopyService';
+import { useResizeDetector } from 'react-resize-detector';
+import debounce from 'lodash.debounce';
 
 const Component = React.lazy(() => {
   return import('./DicomMicroscopyViewport');
@@ -41,7 +44,7 @@ const extension: Types.Extensions.Extension = {
    * {name, component} object. Example of a viewport module is the CornerstoneViewport
    * that is provided by the Cornerstone extension in OHIF.
    */
-  getViewportModule({ servicesManager, extensionManager, commandsManager }) {
+  getViewportModule({ servicesManager }) {
     /**
      *
      * @param props {*}
@@ -59,25 +62,34 @@ const extension: Types.Extensions.Extension = {
       const [viewportGrid, viewportGridService] = useViewportGrid();
       const { activeViewportId } = viewportGrid;
 
-      // a unique identifier based on the contents of displaySets.
-      // since we changed our rendering pipeline and if there is no
-      // element size change nor viewportId change we won't re-render
-      // we need a way to force re-rendering when displaySets change.
       const displaySetsKey = useMemo(() => {
         return props.displaySets.map(ds => ds.displaySetInstanceUID).join('-');
       }, [props.displaySets]);
 
+      const onResize = debounce(() => {
+        const { microscopyService } = servicesManager.services;
+        const managedViewer = microscopyService.getAllManagedViewers();
+
+        if (managedViewer && managedViewer.length > 0) {
+          managedViewer[0].viewer.resize();
+        }
+      }, 100);
+
+      const { ref: resizeRef } = useResizeDetector({
+        onResize,
+        handleHeight: true,
+        handleWidth: true,
+      });
+
       return (
         <MicroscopyViewport
           key={displaySetsKey}
-          servicesManager={servicesManager}
-          extensionManager={extensionManager}
-          commandsManager={commandsManager}
           activeViewportId={activeViewportId}
           setViewportActive={(viewportId: string) => {
             viewportGridService.setActiveViewportId(viewportId);
           }}
           viewportData={viewportOptions}
+          resizeRef={resizeRef}
           {...props}
         />
       );
@@ -99,7 +111,9 @@ const extension: Types.Extensions.Extension = {
           const { microscopyService } = servicesManager.services;
 
           const activeInteractions = microscopyService.getActiveInteractions();
-
+          if (!activeInteractions) {
+            return false;
+          }
           const isPrimaryActive = activeInteractions.find(interactions => {
             const sameMouseButton = interactions[1].bindings.mouseButtons.includes('left');
 
@@ -136,22 +150,18 @@ const extension: Types.Extensions.Extension = {
    * Each sop class handler is defined by a { name, sopClassUids, getDisplaySetsFromSeries}.
    * Examples include the default sop class handler provided by the default extension
    */
-  getSopClassHandlerModule({ servicesManager, commandsManager, extensionManager }) {
+  getSopClassHandlerModule(params) {
     return [
-      getDicomMicroscopySopClassHandler({
-        servicesManager,
-        extensionManager,
-      }),
-      getDicomMicroscopySRSopClassHandler({
-        servicesManager,
-        extensionManager,
-      }),
+      getDicomMicroscopySRSopClassHandler(params),
+      getDicomMicroscopyANNSopClassHandler(params),
     ];
   },
 
   getPanelModule,
 
   getCommandsModule,
+
+  getCustomizationModule,
 };
 
 export default extension;

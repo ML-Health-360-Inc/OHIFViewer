@@ -1,4 +1,4 @@
-# This workflow will build and push a Docker container to an Azure Web App when a commit is pushed to your default branch.
+﻿# This workflow will build and push a Docker container to an Azure Web App when a commit is pushed to your default branch.
 #
 # This workflow assumes you have already created the target Azure App Service web app.
 # For instructions see https://docs.microsoft.com/en-us/azure/app-service/quickstart-custom-container?tabs=dotnet&pivots=container-linux
@@ -58,6 +58,9 @@ jobs:
           push: true
           tags: twsohifviewer.azurecr.io/ohif-viewer:${{ github.sha }}
           file: ./Dockerfile
+          # Cloud App Service serves at site root (/segmentation); do not bake /ohif/.
+          build-args: |
+            PUBLIC_URL=/
   
       # - name: Log in to GitHub container registry
       #   uses: docker/login-action@343f7c4344506bcbf9b4de18042ae17996df046d # v3.0.0

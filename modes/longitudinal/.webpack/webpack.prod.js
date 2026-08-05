@@ -1,7 +1,6 @@
 const webpack = require('webpack');
 const { merge } = require('webpack-merge');
 const path = require('path');
-const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 
 const pkg = require('./../package.json');
 const webpackCommon = require('./../../../.webpack/webpack.base.js');
@@ -10,7 +9,7 @@ const ROOT_DIR = path.join(__dirname, './../');
 const SRC_DIR = path.join(__dirname, '../src');
 const DIST_DIR = path.join(__dirname, '../dist');
 const ENTRY = {
-  app: `${SRC_DIR}/index.js`,
+  app: `${SRC_DIR}/index.ts`,
 };
 
 module.exports = (env, argv) => {
